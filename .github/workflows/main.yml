@@ -1,0 +1,44 @@
+name: "secret_actions"
+
+on:
+  schedule:
+    - cron: "23 20 * * *"
+    - cron: "24 6 * * *"
+  workflow_dispatch:
+
+env:
+  RUN_ENV: 'prod'
+  TZ: 'Asia/Shanghai'
+  FUCK_GH_PAT: ${{ secrets.GH_PAT }}
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout master with GH_PAT
+        if: ${{ env.FUCK_GH_PAT }}
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+          ref: main
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Checkout master without GH_PAT
+        if: ${{ !env.FUCK_GH_PAT }}
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Set up python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: edit_actions.py
+        if: ${{ env.FUCK_GH_PAT }}
+        run: python3 ./edit_actions.py '${{ secrets.SCHEDULE }}'
+
+      - name: run.py
+        run: python3 ./run.py ${{ secrets.KEY_IV }}
